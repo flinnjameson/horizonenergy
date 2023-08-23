@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #FFA500, #FF6347);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .calculator {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .calculator h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .calculator label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    .calculator input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .calculator button {
+      background-color: #FF6347;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 12px 20px;
+      transition: background-color 0.3s;
+      width: 100%;
+    }
+
+    .calculator button:hover {
+      background-color: #FF4500;
+    }
+
+    .results {
+      margin-top: 30px;
+      display: none;
+    }
+
+    .results h2 {
+      font-size: 24px;
+      color: #030850;
+      margin-bottom: 15px;
+    }
+
+    .results p {
+      font-size: 18px;
+      color: #030850;
+      margin-bottom: 10px;
+    }
+
+    .results span {
+      font-weight: bold;
+      color: #030850;
+    }
+    .hide-button {
+      background-color: #FF6347;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 8px 16px;
+      transition: background-color 0.3s;
+    }
+
+    .hide-button:hover {
+      background-color: #FF4500;
+    }
+  </style>
+  <title>Solar Calculator</title>
+</head>
+<body>
+  <div class="calculator">
+    <h1>Solar Savings Calculator</h1>
+    <form id="calculator-form">
+      <label for="avgMonthlyBill">Average Monthly Electricity Bill ($)</label>
+      <input type="number" id="avgMonthlyBill" step="0.01" required>
+      <label for="avgMonthlyCost">Average Monthly Electricity Cost ($/kWh)</label>
+      <input type="number" id="avgMonthlyCost" step="0.001" required>
+      <label for="offsetPercentage">Offset Percentage (%)</label>
+      <input type="number" id="offsetPercentage" step="0.1" required>
+      <button type="submit">Calculate</button>
+    </form>
+    <div class="results" id="results">
+      <h2>Estimated Results</h2>
+      <p>Total Estimated System Size: <span id="systemSize"></span> kW</p>
+      <p>Annual Production: <span id="annualProduction"></span> kWh</p>
+      <p>Annual Bill Savings: $<span id="annualSavings"></span></p>
+      <p>25-Year Savings: $<span id="twentyFiveYearSavings"></span></p>
+    </div>
+   
+    <div class="table-section" id="table-section">
+      <h2>Solar Production and Savings Table</h2>
+      <button class="hide-button" id="toggleTable">Toggle Table</button>
+      <table id="savings-table">
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Production (kWh)</th>
+            <th>Savings ($)</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- Table rows will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById("calculator-form");
+    const resultsDiv = document.getElementById("results");
+    const tableSection = document.getElementById("table-section");
+    const tableBody = document.getElementById("table-body");
+    const toggleButton = document.getElementById("toggleTable");
+    const savingsTable = document.getElementById("savings-table");
+
+    toggleButton.addEventListener("click", function () {
+      if (savingsTable.style.display === "none") {
+        savingsTable.style.display = "table";
+      } else {
+        savingsTable.style.display = "none";
+      }
+    });
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const avgMonthlyBill = parseFloat(document.getElementById("avgMonthlyBill").value);
+      const avgMonthlyCost = parseFloat(document.getElementById("avgMonthlyCost").value);
+      const offsetPercentage = parseFloat(document.getElementById("offsetPercentage").value);
+      const khwRate = avgMonthlyCost / 100; // Convert to $/kWh
+      const solarCost = 0.12;
+      const federalTaxIncentive = 0.3;
+      const years = 25;
+
+      const annualProduction = (avgMonthlyBill / khwRate) * 12 * (offsetPercentage / 100);
+      const annualSavings = avgMonthlyBill * 12 - annualProduction * solarCost;
+      const twentyFiveYearSavings = annualSavings * years * (1 + federalTaxIncentive);
+
+      document.getElementById("systemSize").textContent = (annualProduction / 1000).toFixed(2);
+      document.getElementById("annualProduction").textContent = annualProduction.toFixed(2);
+      document.getElementById("annualSavings").textContent = annualSavings.toFixed(2);
+      document.getElementById("twentyFiveYearSavings").textContent = twentyFiveYearSavings.toFixed(2);
+
+      // Clear previous table rows
+      tableBody.innerHTML = '';
+
+      // Populate the table with solar production and savings values
+      for (let year = 1; year <= years; year++) {
+        const row = document.createElement("tr");
+        const yearCell = document.createElement("td");
+        yearCell.textContent = year;
+        row.appendChild(yearCell);
+
+        const productionCell = document.createElement("td");
+        const savingsCell = document.createElement("td");
+
+        const annualProd = annualProduction * year;
+        productionCell.textContent = annualProd.toFixed(2);
+        row.appendChild(productionCell);
+
+        const annualSave = annualSavings * year * (1 + federalTaxIncentive);
+        savingsCell.textContent = annualSave.toFixed(2);
+        row.appendChild(savingsCell);
+
+        tableBody.appendChild(row);
+      }
+
+      resultsDiv.style.display = "block";
+      tableSection.style.display = "block";
+    });
+  </script>
+</body>
+</html>
